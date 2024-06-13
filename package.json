@@ -1,9 +1,10 @@
 {
-  "name": "mlb",
+  "name": "algorithm",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "script.js",
   "scripts": {
+    "start": "node script.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,11 +12,6 @@
   "license": "ISC",
   "dependencies": {
     "csv-parser": "^3.0.0",
-    "fs": "^0.0.1-security",
-    "lodash": "^4.17.21",
-    "log4js": "^6.9.1",
-    "moment-timezone": "^0.5.45",
-    "mongoose": "^8.4.1",
-    "node-datetime": "^2.1.2"
+    "node-cache": "^5.1.2"
   }
 }
