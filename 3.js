@@ -6,7 +6,7 @@ const TEAM_SIZE = 10;
 const MAX_BUDGET = 50000;
 const POPULATION_SIZE = 100;
 const GENERATIONS = 100;
-const MUTATION_RATE = 0.1;
+let MUTATION_RATE = 0.1;
 const ELITE_RATE = 0.1;
 
 // Read CSV file
@@ -23,14 +23,12 @@ function readCSV(filePath) {
 
 // Generate a random lineup
 function generateLineup(players) {
-    const lineup = [];
-    while (lineup.length < TEAM_SIZE) {
+    const lineup = new Set();
+    while (lineup.size < TEAM_SIZE) {
         const player = players[Math.floor(Math.random() * players.length)];
-        if (!lineup.includes(player)) {
-            lineup.push(player);
-        }
+        lineup.add(player);
     }
-    return lineup;
+    return Array.from(lineup);
 }
 
 // Calculate the fitness of a lineup
@@ -61,20 +59,29 @@ function selection(population, fitnesses) {
 
 // Crossover operation
 function crossover(parent1, parent2) {
-    const child = [];
+    const child = new Set();
     const midPoint = Math.floor(Math.random() * TEAM_SIZE);
     for (let i = 0; i < TEAM_SIZE; i++) {
-        if (i > midPoint) child.push(parent1[i]);
-        else child.push(parent2[i]);
+        if (i > midPoint) child.add(parent1[i]);
+        else child.add(parent2[i]);
     }
-    return child;
+    // Ensure child has exactly TEAM_SIZE unique players
+    while (child.size < TEAM_SIZE) {
+        const randomPlayer = parent1.concat(parent2)[Math.floor(Math.random() * (parent1.length + parent2.length))];
+        child.add(randomPlayer);
+    }
+    return Array.from(child);
 }
 
 // Mutation operation
 function mutate(lineup, players) {
     if (Math.random() < MUTATION_RATE) {
         const index = Math.floor(Math.random() * TEAM_SIZE);
-        lineup[index] = players[Math.floor(Math.random() * players.length)];
+        let newPlayer;
+        do {
+            newPlayer = players[Math.floor(Math.random() * players.length)];
+        } while (lineup.includes(newPlayer));
+        lineup[index] = newPlayer;
     }
     return lineup;
 }
@@ -108,7 +115,18 @@ async function geneticAlgorithm() {
         }
 
         population = newPopulation;
-        console.log(`Generation ${generation} Best Fitness: ${Math.max(...fitnesses)}`);
+
+        // Calculate and print the best fitness of the current generation
+        const maxFitness = Math.max(...fitnesses);
+        console.log(`Generation ${generation} Best Fitness: ${maxFitness}`);
+
+        // Increase mutation rate if diversity is low
+        const uniqueLineups = new Set(population.map(lineup => lineup.map(player => player.player_id).sort().join(',')));
+        if (uniqueLineups.size < POPULATION_SIZE * 0.8) {
+            MUTATION_RATE = Math.min(MUTATION_RATE + 0.01, 0.5);
+        } else {
+            MUTATION_RATE = 0.1;
+        }
     }
 
     const finalFitnesses = population.map(calculateFitness);
